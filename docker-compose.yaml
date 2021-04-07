@@ -1,0 +1,20 @@
+version: '3.7'
+services:
+
+  proxy:
+    build:
+      context: .
+      dockerfile: ./Dockerfile-envoy
+    environment:
+      LOGLEVEL: "info"
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml
+    networks:
+      - envoymesh
+    ports:
+      - "10000:10000"
+    expose:
+      - "10000"
+
+networks:
+  envoymesh: {}

@@ -1,0 +1,128 @@
+static_resources:
+  listeners:
+  - name: http
+    address:
+      socket_address: 
+        address: 127.0.0.1
+        port_value: 10000
+    filter_chains:
+    - filters:
+      - name: envoy.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          stat_prefix: ingress_http
+          codec_type: AUTO
+
+          access_log:
+          - name: envoy.access_loggers.stdout
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+
+          http_filters:
+          - name: envoy.filters.http.lua
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+              ### This one will be called on every single call
+              inline_code: |
+                function envoy_on_request(rh)
+                  rh_logInfo("Every request")
+                end
+                function envoy_on_request(rh)
+                  rh_logInfo("Every response")
+                end
+              source_codes:
+                ### add bar to a heaader which is a copy of the user agent
+                addbar.lua:
+                  inline_string: |
+                    function envoy_on_request(request_handle)
+                      request_handle:logInfo("The add bar lua")
+                      local ua = request_handle:headers():get("User-Agent")
+                      request_handle:headers():add("x-apigee-bar", ua)
+                    end
+                ### let's do some xml -> json and then json -> xml translations depending on `content-type` and `accept` headers
+                jsonit.lua:
+                  inline_string: |
+                    local inspect = require "inspect"
+                    local m = require "lib.mylib"
+
+                    local accept = ""
+
+                    function envoy_on_request(request_handle)
+                      request_handle:logInfo("The jsonit lua")
+                      local ct = request_handle:headers():get("Content-Type")
+
+                      accept = request_handle:headers():get("Accept")
+
+                      local body = request_handle:body()
+
+                      if ct ~= "xml" then
+                        local jsonbody = m.xmlbody_to_json(body)
+
+                        local cl = request_handle:body():setBytes(jsonbody)
+
+                        request_handle:headers():replace("content-length", cl)
+                        request_handle:headers():replace("content-type", "application/json")
+                      else
+                        request_handle:logInfo("Content-Type wasn't set to xml")
+                      end
+                    end
+
+                    function envoy_on_response(response_handle)
+                      local body = response_handle:body()
+
+                      if accept == "application/xml" then
+                        response_handle:logInfo("Accept is set as: "..accept)
+                        local xmlbody = m.jsonbody_to_xml(body)
+                        local cl = response_handle:body():setBytes(xmlbody)
+
+                        response_handle:headers():replace("content-length", cl)
+                        response_handle:headers():replace("content-type", "application/xml")
+                      end
+                    end
+          - name: envoy.filters.http.router
+            typed_config: {}
+          route_config:
+            name: local_route
+            virtual_hosts:
+            - name: local_service
+              domains: 
+                - "*"
+              routes:
+              - match: 
+                  prefix: "/get"
+                route: 
+                  host_rewrite_literal: "httpbin.org"
+                  cluster: test
+                typed_per_filter_config:
+                  envoy.filters.http.lua:
+                    "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.LuaPerRoute
+                    name: addbar.lua
+              - match: 
+                  prefix: "/post"
+                route: 
+                  host_rewrite_literal: "httpbin.org"
+                  cluster: test
+                typed_per_filter_config:
+                  envoy.filters.http.lua:
+                    "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.LuaPerRoute
+                    name: jsonit.lua
+  clusters:
+  - name: test
+    connect_timeout: 0.25s
+    type: LOGICAL_DNS
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: test
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: httpbin.org
+                port_value: 80
+admin:
+  access_log_path: /dev/null
+  address:
+    socket_address:
+      address: 127.0.0.1
+      port_value: 11000

@@ -1,0 +1,12 @@
+From envoyproxy/envoy-dev:latest
+
+WORKDIR /envoystuff
+RUN apt update
+RUN apt install curl net-tools luarocks git cmake -y
+RUN luarocks install xml2lua
+RUN luarocks install json-lua
+RUN luarocks install inspect
+
+ADD lib ./lib
+
+CMD /usr/local/bin/envoy -c /etc/envoy/envoy.yaml -l ${LOGLEVEL}
