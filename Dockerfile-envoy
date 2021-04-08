@@ -8,5 +8,6 @@ RUN luarocks install json-lua
 RUN luarocks install inspect
 
 ADD lib ./lib
+ADD xform.lua ./xform.lua
 
 CMD /usr/local/bin/envoy -c /etc/envoy/envoy.yaml -l ${LOGLEVEL}

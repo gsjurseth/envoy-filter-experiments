@@ -79,6 +79,9 @@ static_resources:
                         response_handle:headers():replace("content-type", "application/xml")
                       end
                     end
+                ### Let's transform a get request to 
+                xform.lua:
+                  filename: ./xform.lua
           - name: envoy.filters.http.router
             typed_config: {}
           route_config:
@@ -106,6 +109,16 @@ static_resources:
                   envoy.filters.http.lua:
                     "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.LuaPerRoute
                     name: jsonit.lua
+              - match: 
+                  prefix: "/xform"
+                route: 
+                  prefix_rewrite: "/foobar"
+                  host_rewrite_literal: "emea-poc15-test.apigee.net"
+                  cluster: apigee
+                typed_per_filter_config:
+                  envoy.filters.http.lua:
+                    "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.LuaPerRoute
+                    name: xform.lua
   clusters:
   - name: test
     connect_timeout: 0.25s
@@ -119,6 +132,32 @@ static_resources:
             address:
               socket_address:
                 address: httpbin.org
+                port_value: 80
+  - name: apigee
+    connect_timeout: 0.25s
+    type: LOGICAL_DNS
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: test
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: emea-poc15-test.apigee.net
+                port_value: 80
+  - name: currency
+    connect_timeout: 0.25s
+    type: LOGICAL_DNS
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: test
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: currencyconverter.kowabunga.net
                 port_value: 80
 admin:
   access_log_path: /dev/null

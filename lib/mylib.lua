@@ -12,10 +12,19 @@ function M.jsonbody_to_xml(b)
 end
 
 function M.xmlbody_to_json(b)
+  print(b)
   local parser = xml2lua.parser(handler)
   parser:parse(b:getBytes(0, b:length()))
 
   local nbody = json:encode(handler.root)
+  return nbody
+end
+
+function M.xmlstring_to_json(b)
+  local parser = xml2lua.parser(handler)
+  parser:parse(b)
+
+  nbody = json:encode(handler.root)
   return nbody
 end
 
