@@ -146,19 +146,6 @@ static_resources:
               socket_address:
                 address: emea-poc15-test.apigee.net
                 port_value: 80
-  - name: currency
-    connect_timeout: 0.25s
-    type: LOGICAL_DNS
-    lb_policy: ROUND_ROBIN
-    load_assignment:
-      cluster_name: test
-      endpoints:
-      - lb_endpoints:
-        - endpoint:
-            address:
-              socket_address:
-                address: currencyconverter.kowabunga.net
-                port_value: 80
 admin:
   access_log_path: /dev/null
   address:

@@ -128,7 +128,14 @@ And yields:
 }
 ```
 
-### Last example
+### Last example: A SOAP -> REST use case
+And what if you wanted to setup a `GET` request that transforms the request to a
+SOAP/POST? This example does just that. The backend is not a real SOAP service,
+but it *does* send a real SOAP request to the mocked backend. I simply copied
+the currencies example available online. In the future I may redeploy a real SOAP
+service i've used in the past and connect this to that backend. It changes nothing
+about the capabilities illustrated in this example.
+
 Maybe you don't want any code in `envoy.yaml` at all. That's easily accomplished by specifying the source like so:
 
 ```yaml
