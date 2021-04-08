@@ -128,6 +128,32 @@ And yields:
 }
 ```
 
+### Last example
+Maybe you don't want any code in `envoy.yaml` at all. That's easily accomplished by specifying the source like so:
+
+```yaml
+source_codes:
+  xform.lua:
+    filename: ./xform.lua
+```
+
+The `xform.lua` script still uses the same `envoy_on_request` and `envoy_on_response`
+stream handlers to do its work. However, in this final case we're also taking an 
+inbound `GET` request, transforming it to a POST and then sending a SOAP payload.
+
+Then, if the `Accept` header is set to `application/json` the response is converted
+to json before sending back.
+
+That example is executed like so:
+```bash
+docker exec -it envoy-filter-experiments_proxy_1 curl -i http://localhost:10000/xform -H "accept: application/json"
+```
+
+And yields:
+```json
+{"ArrayOfString":{"_attr":{"xmlns":"http://tempuri.org/","xmlns:xsd":"http://www.w3.org/2001/XMLSchema","xmlns:xsi":"http://www.w3.org/2001/XMLSchema-instance"},"string":["AED","AFN","ALL","AMD","ANG","AOA","ARS","AUD","AWG","AZN","BAM","BBD","BDT","BGN","BHD","BIF","BND","BOB","BRL","BSD","BWP","BYN","BZD","CAD","CDF","CHF","CLP","CNY","COP","CRC","CUP","CVE","CYP","CZK","DJF","DKK","DOP","DZD","EEK","EGP","ERN","ETB","EUR","FJD","GBP","GEL","GHS","GIP","GMD","GNF","GTQ","GYD","HKD","HNL","HRK","HTG","HUF","IDR","ILS","INR","IQD","IRR","ISK","JMD","JOD","JPY","KES","KGS","KHR","KMF","KRW","KWD","KZT","LAK","LBP","LKR","LRD","LSL","LTL","LVL","LYD","MAD","MDL","MGA","MKD","MMK","MNT","MOP","MRO","MRU","MTL","MUR","MVR","MWK","MXN","MYR","MZN","NAD","NGN","NIO","NOK","NPR","NZD","OMR","PAB","PEN","PGK","PHP","PKR","PLN","PYG","QAR","RON","RSD","RUB","RWF","SAR","SBD","SCR","SDG","SEK","SGD","SIT","SKK","SLL","SOS","SRD","SSP","STN","SVC"]}}
+```
+
 ## What's next
 We could obviously do a lot more, but I think this repo shows it's possible to build real,
 body-touching examles with envoy that shoudld be able to accomplish at least simple
