@@ -82,6 +82,8 @@ static_resources:
                 ### Let's transform a get request to 
                 xform.lua:
                   filename: ./xform.lua
+                login.lua:
+                  filename: ./login.lua
           - name: envoy.filters.http.router
             typed_config: {}
           route_config:
@@ -119,6 +121,16 @@ static_resources:
                   envoy.filters.http.lua:
                     "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.LuaPerRoute
                     name: xform.lua
+              - match: 
+                  prefix: "/callout"
+                route: 
+                  prefix_rewrite: "/get"
+                  host_rewrite_literal: "httpbin.org"
+                  cluster: test
+                typed_per_filter_config:
+                  envoy.filters.http.lua:
+                    "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.LuaPerRoute
+                    name: login.lua
   clusters:
   - name: test
     connect_timeout: 0.25s
@@ -138,7 +150,7 @@ static_resources:
     type: LOGICAL_DNS
     lb_policy: ROUND_ROBIN
     load_assignment:
-      cluster_name: test
+      cluster_name: apigee
       endpoints:
       - lb_endpoints:
         - endpoint:
