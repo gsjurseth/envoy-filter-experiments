@@ -170,10 +170,30 @@ The `login.lua` script uses the same apigee proxy from the previous example to m
 a call (a POST), grab that output and then add it to a header. This obviously
 could be an actual login, but in this case it's just showing the basic flow.
 
+The key is this piece in the `envoy_on_request` method:
+
+```lua
+  local h,b = rh:httpCall(
+  "apigee",
+  {
+    [":method"] = "POST",
+    [":path"] = "/foobar/snarf",
+    [":authority"] = "emea-poc15-test.apigee.net",
+    ["accept"] = "application/json",
+    ["Content-Type"] = "application/json"
+  },
+  "{\"msg\": \"I am a little teapot\" }",
+  0)
+```
+
+That makes an additional callout to another envoy defined cluster: `apigee`
+
 Execute like so:
 ```bash
 docker exec -it envoy-filter-experiments_proxy_1 curl -i http://localhost:10000/callout
 ```
+
+And that yields the following:
 
 ```json
 {
