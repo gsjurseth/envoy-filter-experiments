@@ -175,8 +175,7 @@ Execute like so:
 docker exec -it envoy-filter-experiments_proxy_1 curl -i http://localhost:10000/callout
 ```
 
-```
-json
+```json
 {
   "args": {},
   "headers": {
