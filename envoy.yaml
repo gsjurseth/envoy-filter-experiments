@@ -25,12 +25,10 @@ static_resources:
               ### This one will be called on every single call
               inline_code: |
                 function envoy_on_request(rh)
-                  rh:logInfo("Every request")
-                  rh:logInfo("####################################################")
+                  rh:logInfo("Every request not covered by source_codes below")
                 end
                 function envoy_on_response(rh)
-                  rh:logInfo("Every response")
-                  rh:logInfo("####################################################")
+                  rh:logInfo("Every response not covered by source_codes below")
                 end
               source_codes:
                 ### add bar to a heaader which is a copy of the user agent
