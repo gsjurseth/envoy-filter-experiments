@@ -128,7 +128,7 @@ And yields:
 }
 ```
 
-### Last example: A SOAP -> REST use case
+### Another example: A SOAP -> REST use case
 And what if you wanted to setup a `GET` request that transforms the request to a
 SOAP/POST? This example does just that. The backend is not a real SOAP service,
 but it *does* send a real SOAP request to the mocked backend. I simply copied
@@ -159,6 +159,38 @@ docker exec -it envoy-filter-experiments_proxy_1 curl -i http://localhost:10000/
 And yields:
 ```json
 {"ArrayOfString":{"_attr":{"xmlns":"http://tempuri.org/","xmlns:xsd":"http://www.w3.org/2001/XMLSchema","xmlns:xsi":"http://www.w3.org/2001/XMLSchema-instance"},"string":["AED","AFN","ALL","AMD","ANG","AOA","ARS","AUD","AWG","AZN","BAM","BBD","BDT","BGN","BHD","BIF","BND","BOB","BRL","BSD","BWP","BYN","BZD","CAD","CDF","CHF","CLP","CNY","COP","CRC","CUP","CVE","CYP","CZK","DJF","DKK","DOP","DZD","EEK","EGP","ERN","ETB","EUR","FJD","GBP","GEL","GHS","GIP","GMD","GNF","GTQ","GYD","HKD","HNL","HRK","HTG","HUF","IDR","ILS","INR","IQD","IRR","ISK","JMD","JOD","JPY","KES","KGS","KHR","KMF","KRW","KWD","KZT","LAK","LBP","LKR","LRD","LSL","LTL","LVL","LYD","MAD","MDL","MGA","MKD","MMK","MNT","MOP","MRO","MRU","MTL","MUR","MVR","MWK","MXN","MYR","MZN","NAD","NGN","NIO","NOK","NPR","NZD","OMR","PAB","PEN","PGK","PHP","PKR","PLN","PYG","QAR","RON","RSD","RUB","RWF","SAR","SBD","SCR","SDG","SEK","SGD","SIT","SKK","SLL","SOS","SRD","SSP","STN","SVC"]}}
+```
+
+### An example with a callout
+What if you need to grab an incoming request, make another request in flight,
+use some part of that response and add it to the next requst. Like say for
+a login. Well this login example shows that.
+
+The `login.lua` script uses the same apigee proxy from the previous example to make 
+a call (a POST), grab that output and then add it to a header. This obviously
+could be an actual login, but in this case it's just showing the basic flow.
+
+Execute like so:
+```bash
+docker exec -it envoy-filter-experiments_proxy_1 curl -i http://localhost:10000/callout
+```
+
+```
+json
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Host": "httpbin.org",
+    "User-Agent": "curl/7.58.0",
+    "X-Amzn-Trace-Id": "Root=1-6076d847-120b2e2c3036e57a3fdf4ccd",
+    "X-Apigee-Message": "I am a little teapot",
+    "X-Envoy-Expected-Rq-Timeout-Ms": "15000",
+    "X-Envoy-Original-Path": "/callout"
+  },
+  "origin": "1.2.3.4",
+  "url": "http://httpbin.org/get"
+}
 ```
 
 ## What's next
